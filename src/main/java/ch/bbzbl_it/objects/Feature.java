@@ -1,12 +1,12 @@
 package ch.bbzbl_it.objects;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
+/**
+ * Feature class. Contains properties
+ */
 public class Feature {
 
-    // private Point geometry;
     private Properties properties;
 
     public long getId() {

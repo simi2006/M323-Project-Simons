@@ -1,0 +1,6 @@
+﻿Sie haben folgende Bestellung aufgegeben: 
+Name des Geodatensatzes: Move and Chill 
+Name des Ausschnittes: full
+Ausschnitt (falls definiert): 0, 0, 0,0 
+Zeitpunkt der Bearbeitung: 10.09.2024 - 10:30 
+

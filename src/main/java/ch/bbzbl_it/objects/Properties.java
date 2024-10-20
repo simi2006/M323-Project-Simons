@@ -1,16 +1,15 @@
 package ch.bbzbl_it.objects;
 
-import com.google.gson.annotations.Expose;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
+/**
+ * Feature class
+ */
 @Data
 @Getter
-@Setter
 public class Properties {
 
     private LocalDateTime zeitpunkt;

@@ -1,60 +1,77 @@
 package ch.bbzbl_it;
 
 import ch.bbzbl_it.objects.Dataset;
-import ch.bbzbl_it.objects.Feature;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
+import java.util.InputMismatchException;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        System.out.println("1. Auslastung pro Bank (Durchschnitt)");
-        System.out.println("2. Auslastung pro Zeit (Durchschnitt)");
-        System.out.println("3. Auslastung bei Temperatur (Spannweiten)");
-        System.out.println("4. Top Ten Auslastung (Wenigste/Meiste)");
-        System.out.println("Wählen sie eine Option! ");
+        var data = extractData();
+        printOptions();
 
-        // var reader = new DataInputStream(System.in);
-        var reader = new Scanner(System.in);
-        int input = reader.nextInt();
+        // Main loop
+        while (true) {
+            var reader = new Scanner(System.in);
+            try {
+                int input = reader.nextInt();
+                Options.getOption(input).print(data);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage());
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input");
+            }
+            System.out.println("\r\nPress Ctrl+C to exit or input an option ");
+        }
+    }
 
-        var option = Options.getOption(input);
+    /**
+     * Method to return data set extracted from the JSON file
+     *
+     * @return Data set extracted from the JSON file
+     * @throws IOException If the file can't be found
+     */
+    private static Dataset extractData() throws IOException {
 
-        var file = new File("C:\\Users\\simon\\Downloads\\e05e4cef-6f4e-11ef-956d-005056b0ce82\\data\\taz.view_moveandchill.json");
+        // Get file from ressources
+        ClassLoader classLoader = Main.class.getClassLoader();
+        var srcDataFile = classLoader.getResource("e05e4cef-6f4e-11ef-956d-005056b0ce82/data/taz.view_moveandchill.json");
 
+        // Check if file was successfully retrieved
+        if (srcDataFile == null) {
+            throw new FileNotFoundException("File not found: e05e4cef-6f4e-11ef-956d-005056b0ce82/data/taz.view_moveandchill.json");
+        }
+        var file = new File(srcDataFile.getFile());
+
+        // Configure and create parser
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
         gsonBuilder.registerTypeAdapter(LocalDateTime.class, new CustomLocalDateTimeDeserializer());
         Gson gson = gsonBuilder.create();
 
-        var data = gson.fromJson(new FileReader(file), Dataset.class);
-
-        option.print(data);
-
-        var oneD = data.getFeatures().stream().collect(Collectors.groupingBy(Feature::getSensor_eui));
-
-        var twoD = oneD.entrySet().stream().map(o -> Map.entry(o.getKey(), o.getValue().stream().collect(Collectors.groupingBy(e -> e.getZeitpunkt().getHour())))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-
-        for (var feature : data.getFeatures()) {
-//            System.out.println(feature.toString());
-        }
-
-
-
-        System.out.println("Total: " + oneD.size());
+        // Parse and return data
+        return gson.fromJson(new FileReader(file), Dataset.class);
 
     }
+
+    /**
+     * Method to print options
+     */
+    private static void printOptions() {
+        for (var option : Options.values()) {
+            System.out.println(option.getOptionNumber() + ". " + option.getDescribtion());
+        }
+        System.out.println("Wählen sie eine Option!");
+    }
+
 }
