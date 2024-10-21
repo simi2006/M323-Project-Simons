@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
@@ -24,8 +25,7 @@ public class Main {
         while (true) {
             var reader = new Scanner(System.in);
             try {
-                int input = reader.nextInt();
-                Options.getOption(input).print(data);
+                Options.getOption(reader.nextInt()).processAndPrint(data);
             } catch (IllegalArgumentException e) {
                 System.out.println(e.getMessage());
             } catch (InputMismatchException e) {
@@ -68,9 +68,7 @@ public class Main {
      * Method to print options
      */
     private static void printOptions() {
-        for (var option : Options.values()) {
-            System.out.println(option.getOptionNumber() + ". " + option.getDescribtion());
-        }
+        Arrays.stream(Options.values()).forEach(option -> System.out.println(option.getOptionNumber() + ". " + option.getDescribtion()));
         System.out.println("Wählen sie eine Option!");
     }
 

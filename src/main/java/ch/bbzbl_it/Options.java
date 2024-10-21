@@ -22,10 +22,11 @@ public enum Options {
 
     OPTION1(1, "Auslastung pro Bank (Durchschnitt)") {
         @Override
-        public void print(Dataset dataset) {
+        public void processAndPrint(Dataset dataset) {
             try {
-                var orgEntries = dataset
-                        .getFeatures()
+                System.out.println("Used dataset: " + dataset.getName() + "\r\n");
+                System.out.printf("\t %16s \t %10s \t %12s \t %12s\r\n", "SensorEUI", "Auslastung", "Breitengrad", "Längengrad");
+                dataset.getFeatures()
                         .stream()
                         // Group entries by their sensor_eui
                         .collect(Collectors.groupingBy(Feature::getSensor_eui))
@@ -33,20 +34,15 @@ public enum Options {
                         .stream()
                         // Map all entries to contain additional info
                         .map(this::generateEntry)
-                        .toList();
-                System.out.println("Used dataset: " + dataset.getName() + "\r\n");
-                System.out.printf("\t %16s \t %10s \t %12s \t %12s\r\n", "SensorEUI", "Auslastung", "Breitengrad", "Längengrad");
-                // Print each entry
-                for (var entry : orgEntries) {
-                    System.out.printf(
-                            "\t %16s \t %10s \t %12s \t %12s\r\n",
-                            entry.getKey().sensor_eui(),
-                            // Format average usage to two decimal places
-                            Math.round(entry.getValue() * 100) / 100f,
-                            entry.getKey().latitude(),
-                            entry.getKey().longitude()
-                    );
-                }
+                        // Print each entry
+                        .forEach(entry -> System.out.printf(
+                                "\t %16s \t %10s \t %12s \t %12s\r\n",
+                                entry.getKey().sensor_eui(),
+                                // Format average usage to two decimal places
+                                Math.round(entry.getValue() * 100) / 100f,
+                                entry.getKey().latitude(),
+                                entry.getKey().longitude()
+                        ));
             } catch (NoSuchElementException e) {
                 System.out.println(e.getMessage());
                 System.out.println("Your data set is incorrect/contains errors");
@@ -55,54 +51,47 @@ public enum Options {
     },
     OPTION2(2, "Auslastung pro Zeit (Durchschnitt)") {
         @Override
-        public void print(Dataset dataset) {
-            var orgEntries = dataset
-                    .getFeatures()
-                    .stream()
-                    .collect(Collectors.groupingBy(feature -> feature.getZeitpunkt().getHour()))
-                    .entrySet();
+        public void processAndPrint(Dataset dataset) {
             System.out.println("Used dataset: " + dataset.getName() + "\r\n");
             System.out.printf("\t %10s \t %10s \r\n", "Zeitrahmen", "Auslastung");
-            // Print each entry
-            for (var entry : orgEntries) {
-                System.out.printf(
-                        "\t %10s \t %10s \r\n",
-                        entry.getKey(),
-                        // Calculate the average usage and format it to two decimal places
-                        Math.round(entry.getValue().stream().mapToInt(Feature::getSit).average().getAsDouble() * 100) / 100f
-                );
-            }
+            dataset.getFeatures()
+                    .stream()
+                    // Collect features by the hour of the timestamp
+                    .collect(Collectors.groupingBy(feature -> feature.getZeitpunkt().getHour()))
+                    // Print each entry
+                    .forEach((key, value) -> System.out.printf(
+                            "\t %16s \t %10s \r\n",
+                            key + ":00h - " + key + ":59h",
+                            // Calculate the average usage and format it to two decimal places
+                            Math.round(averageSit(value) * 100) / 100f
+                    ));
         }
     },
     OPTION3(3, "Auslastung bei Temperatur (Spannweiten)") {
         @Override
-        public void print(Dataset dataset) {
-            var orgEntries = dataset
-                    // Get features (List with data) from the data set
-                    .getFeatures()
-                    .stream()
-                    .filter(entry -> entry.getTemperature() != -100)
-                    // Collect the stream and group it by the temperature
-                    .collect(Collectors.groupingBy(feature -> (int) feature.getTemperature()))
-                    .entrySet();
-
+        public void processAndPrint(Dataset dataset) {
             // Output of the data
             System.out.println("Used dataset: " + dataset.getName() + "\r\n");
             System.out.printf("\t %10s \t %10s \r\n", "Temperatur", "Auslastung");
-            // Print each entry
-            for (var entry : orgEntries) {
-                System.out.printf(
-                        "\t %10s \t %10s \r\n",
-                        entry.getKey().toString() + " °C",
-                        // Calculate the average usage and format it to two decimal places
-                        Math.round(entry.getValue().stream().mapToInt(Feature::getSit).average().getAsDouble() * 100) / 100f
-                );
-            }
+            // Get features (List with data) from the data set
+            dataset.getFeatures()
+                    .stream()
+                    // Filter out faulty entries
+                    .filter(entry -> entry.getTemperature() != -100)
+                    // Collect the stream and group it by the temperature
+                    .collect(Collectors.groupingBy(feature -> (int) feature.getTemperature()))
+                    // Print each entry
+                    .forEach((key, value) -> System.out.printf(
+                            "\t %10s \t %10s \r\n",
+                            key.toString() + " °C",
+                            // Calculate the average usage and format it to two decimal places
+                            Math.round(averageSit(value) * 100) / 100f
+                    ));
         }
     },
     OPTION4(4, "Top Ten Auslastung (Wenigste/Meiste)") {
         @Override
-        public void print(Dataset dataset) {
+        public void processAndPrint(Dataset dataset) {
             System.out.println("Input 1 for meiste and 2 für wenigste");
             // Read input
             var input = new Scanner(System.in).nextInt();
@@ -114,8 +103,10 @@ public enum Options {
             final var sortDir = input == 1 ? 1 : -1;
 
             try {
-                var orgEntries = dataset
-                        .getFeatures()
+                System.out.println("Used dataset: " + dataset.getName() + "\r\n");
+                System.out.printf("\t %16s \t %10s \t %12s \t %12s\r\n", "SensorEUI", "Auslastung", "Breitengrad", "Längengrad");
+                // Get features (List with data) from the data set
+                dataset.getFeatures()
                         .stream()
                         // Group entries by their sensor_eui
                         .collect(Collectors.groupingBy(Feature::getSensor_eui))
@@ -126,20 +117,15 @@ public enum Options {
                         // Sort by value and sorting direction
                         .sorted(((o1, o2) -> o1.getValue().compareTo(o2.getValue()) * sortDir))
                         .limit(10)
-                        .toList();
-                System.out.println("Used dataset: " + dataset.getName() + "\r\n");
-                System.out.printf("\t %16s \t %10s \t %12s \t %12s\r\n", "SensorEUI", "Auslastung", "Breitengrad", "Längengrad");
-                // Print each entry
-                for (var entry : orgEntries) {
-                    System.out.printf(
-                            "\t %16s \t %10s \t %12s \t %12s\r\n",
-                            entry.getKey().sensor_eui(),
-                            // Format average usage to two decimal places
-                            Math.round(entry.getValue() * 100) / 100f,
-                            entry.getKey().latitude(),
-                            entry.getKey().longitude()
-                    );
-                }
+                        // Print each entry
+                        .forEach(entry -> System.out.printf(
+                                "\t %16s \t %10s \t %12s \t %12s\r\n",
+                                entry.getKey().sensor_eui(),
+                                // Format average usage to two decimal places
+                                Math.round(entry.getValue() * 100) / 100f,
+                                entry.getKey().latitude(),
+                                entry.getKey().longitude()
+                        ));
             } catch (NoSuchElementException e) {
                 System.out.println(e.getMessage());
                 System.out.println("Your data set is incorrect/contains errors");
@@ -149,7 +135,7 @@ public enum Options {
     // Extra option to get the metadata of the data set
     OPTION5(5, "Metadaten") {
         @Override
-        public void print(Dataset dataset) {
+        public void processAndPrint(Dataset dataset) {
             // Retrieve file
             var meta = Thread.currentThread().getContextClassLoader().getResource("e05e4cef-6f4e-11ef-956d-005056b0ce82/metadata/metadaten.pdf");
             // Open file
@@ -197,10 +183,18 @@ public enum Options {
 
     /**
      * Method to process and print data
-     *
      * @param dataset Data set to process
      */
-    abstract public void print(Dataset dataset);
+    abstract public void processAndPrint(Dataset dataset);
+
+    /**
+     * Function to calculate average usage from a list of features
+     * @param features List of feature to calculate the average from
+     * @return Average usage
+     */
+    Double averageSit(List<Feature> features) {
+        return features.stream().mapToInt(Feature::getSit).average().orElseThrow(() -> new NoSuchElementException("Average can't be calculated"));
+    }
 
     /**
      * Method to generate entry with additional information in the key ({@link Options.SensorData}) and the average usage as value
@@ -213,7 +207,7 @@ public enum Options {
         if (!value.isEmpty()) {
             return Map.entry(
                     new SensorData(entry.getKey(), value.getFirst().getLongitude(), value.getFirst().getLatitude()),
-                    value.stream().mapToInt(Feature::getSit).average().orElseThrow(() -> new NoSuchElementException("Average can't be calculated"))
+                    averageSit(entry.getValue())
             );
         }
         throw new NoSuchElementException("No sensor data found");
