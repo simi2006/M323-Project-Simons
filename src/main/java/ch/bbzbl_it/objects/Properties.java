@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 /**
- * Feature class
+ * Properties class. Contains all data of a single sensor entry
  */
 @Data
 @Getter

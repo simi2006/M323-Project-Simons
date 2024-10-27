@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.util.List;
 
 /**
- * Class Dataset. Contains the name of the data set and the features
+ * Class Dataset. Contains the name of the data set and the features (All entries made by the sensors)
  */
 @Data
 @Getter
