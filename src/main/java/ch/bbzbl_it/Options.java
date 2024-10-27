@@ -4,9 +4,6 @@ import ch.bbzbl_it.objects.Dataset;
 import ch.bbzbl_it.objects.Feature;
 import lombok.Getter;
 
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -70,7 +67,6 @@ public enum Options {
     OPTION3(3, "Auslastung bei Temperatur (Spannweiten)") {
         @Override
         public void processAndPrint(Dataset dataset) {
-            // Output of the data
             System.out.println("Used dataset: " + dataset.getName() + "\r\n");
             System.out.printf("\t %10s \t %10s \r\n", "Temperatur", "Auslastung");
             // Get features (List with data) from the data set
@@ -103,6 +99,7 @@ public enum Options {
             final var sortDir = input == 1 ? 1 : -1;
 
             try {
+                // Print dataset name and title row of the table
                 System.out.println("Used dataset: " + dataset.getName() + "\r\n");
                 System.out.printf("\t %16s \t %10s \t %12s \t %12s\r\n", "SensorEUI", "Auslastung", "Breitengrad", "Längengrad");
                 // Get features (List with data) from the data set
@@ -131,7 +128,8 @@ public enum Options {
                 System.out.println("Your data set is incorrect/contains errors");
             }
         }
-    },
+    };
+    /* ,
     // Extra option to get the metadata of the data set
     OPTION5(5, "Metadaten") {
         @Override
@@ -150,7 +148,7 @@ public enum Options {
                 System.out.println("Fehler beim Öffnen der Datei (Link zum Datenset: https://opendata.swiss/de/dataset/move-and-chill/resource/3d5daaf2-4990-48c9-8291-3d37702c144a)");
             }
         }
-    };
+    };*/
 
     private final int optionNumber;
     private final String describtion;
@@ -204,7 +202,7 @@ public enum Options {
      */
     Map.Entry<SensorData, Double> generateEntry(Map.Entry<String, List<Feature>> entry) {
         final var value = entry.getValue();
-        if (!value.isEmpty()) {
+        if (value != null && !value.isEmpty()) {
             return Map.entry(
                     new SensorData(entry.getKey(), value.getFirst().getLongitude(), value.getFirst().getLatitude()),
                     averageSit(entry.getValue())
